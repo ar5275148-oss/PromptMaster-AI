@@ -14,6 +14,7 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
+          id: './',
           name: 'Assistant - Universal AI Prompt Architect',
           short_name: 'Assistant',
           description: 'Assistant - তোমার বুদ্ধিমত্তা ও প্রম্পট পারফেকশনের বিশ্বস্ত প্ল্যাটফর্ম, চ্যাট ল্যাব ও ইমেজ স্টুডিও।',

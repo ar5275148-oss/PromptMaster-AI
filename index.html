@@ -16,13 +16,16 @@
       }
     </script>
 
-    <!-- PWA & Mobile Web App Meta Tags -->
+    <!-- PWA & Mobile Web App Meta Tags & Compliant Icons -->
     <meta name="theme-color" content="#070b14" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Assistant" />
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./pwa-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="./pwa-512x512.png" />
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="icon" type="image/x-icon" href="./favicon.ico" />
 
@@ -59,5 +62,6 @@
         document.body.appendChild(script);
       }
     </script>
+    <script type="module" src="./registerSW.js"></script>
   </body>
 </html>

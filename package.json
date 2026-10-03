@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && cp -r dist/assets .",
+    "build": "vite build && cp -r dist/assets . && cp dist/manifest.webmanifest dist/registerSW.js dist/sw.js dist/workbox-*.js . && cp public/*.png public/*.ico public/*.svg .",
     "start": "node server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
