@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8">
+    <title>Assistant - রিডাইরেক্টিং...</title>
+    <script>
+      // Single Page App redirect for GitHub Pages
+      sessionStorage.redirect = location.href;
+      var pathSegments = location.pathname.split('/').filter(Boolean);
+      var repoName = pathSegments.length > 0 ? '/' + pathSegments[0] + '/' : '/';
+      // Redirect to repository base or root
+      window.location.replace(repoName);
+    </script>
+  </head>
+  <body style="background-color: #070b14; color: #94a3b8; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+    <p>অ্যাসিস্ট্যান্ট লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করো...</p>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "PromptCraft AI - Universal Prompt Architect",
+  "description": "Universal AI productivity prompt optimizer and diagnostic studio for ChatGPT, Claude, Gemini, DeepSeek, Grok, Perplexity, Copilot, and 20+ LLMs. Converts raw ideas into structured master prompts with flaw analysis, high-thinking reasoning, and 1K-4K image generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
