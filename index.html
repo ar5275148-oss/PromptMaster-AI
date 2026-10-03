@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="bn" class="dark">
+<html lang="bn" class="dark" style="background-color: #070b14; color: #f8fafc;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -9,6 +9,13 @@
     <meta property="og:description" content="Assistant - তোমার বুদ্ধিমত্তা ও প্রম্পট পারফেকশনের বিশ্বস্ত প্ল্যাটফর্ম, চ্যাট ল্যাব ও ইমেজ স্টুডিও।" />
     <meta property="og:type" content="website" />
     
+    <!-- Automatic trailing slash fix for GitHub Pages -->
+    <script>
+      if (!location.pathname.endsWith('/') && !location.pathname.split('/').pop().includes('.')) {
+        location.replace(location.pathname + '/' + location.search + location.hash);
+      }
+    </script>
+
     <!-- PWA & Mobile Web App Meta Tags -->
     <meta name="theme-color" content="#070b14" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -23,8 +30,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-[#070b14] text-slate-100 antialiased selection:bg-blue-500/30 selection:text-blue-200 overflow-x-hidden">
-    <div id="root" class="overflow-x-hidden max-w-full"></div>
+  <body class="bg-[#070b14] text-slate-100 antialiased selection:bg-blue-500/30 selection:text-blue-200 overflow-x-hidden" style="background-color: #070b14; color: #f8fafc; margin: 0; min-height: 100vh;">
+    <div id="root" class="overflow-x-hidden max-w-full">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #070b14; color: #94a3b8; font-family: sans-serif; text-align: center; padding: 20px;">
+        <div style="width: 36px; height: 36px; border: 3px solid #1e293b; border-top-color: #06b6d4; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 14px;"></div>
+        <p style="color: #e2e8f0; font-size: 15px; font-weight: 600; margin: 0;">Assistant লোড হচ্ছে...</p>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
