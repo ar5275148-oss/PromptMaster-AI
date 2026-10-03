@@ -6,7 +6,8 @@ import {
 import { ALL_AI_MODELS } from '../data/modelsData';
 import { deepSanitizeToTumiTomar } from '../utils/bengaliSanitizer';
 import { synthesizeClientPromptArchitect } from '../utils/clientFallbackEngines';
-import { apiPost } from '../utils/apiHelper';
+import { apiPost, getStoredGeminiKeys } from '../utils/apiHelper';
+import { ApiKeySettingsModal } from './ApiKeySettingsModal';
 import { 
   Sparkles, 
   AlertCircle, 
@@ -59,6 +60,7 @@ export const PromptArchitect: React.FC<PromptArchitectProps> = ({
   const [isSpecsModalOpen, setIsSpecsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
 
   // Full Analysis & Master Prompt generation
   const handleAnalyzeAndGenerate = async (customThought?: string, customModelId?: SupportedModelId) => {
@@ -437,6 +439,25 @@ export const PromptArchitect: React.FC<PromptArchitectProps> = ({
             </div>
           )}
 
+          {/* Smart API Key notice banner if running without stored Gemini Key */}
+          {getStoredGeminiKeys().length === 0 && (
+            <div className="bg-gradient-to-r from-amber-500/15 via-blue-500/10 to-indigo-500/15 border border-amber-500/35 rounded-xl px-3 py-1.5 text-xs text-amber-200 flex items-center justify-between gap-2 shadow-sm font-['Hind_Siliguri',sans-serif]">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
+                <span className="truncate text-[11px] sm:text-xs">
+                  গিটহাবে সর্বোচ্চ বুদ্ধিমত্তা ও আসল ডিপ-থিঙ্কিং এআই চালাতে তোমার ফ্রি API Key যুক্ত করো
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsApiKeyModalOpen(true)}
+                className="px-2.5 py-1 rounded-lg bg-amber-500/25 hover:bg-amber-500/40 border border-amber-500/50 text-amber-200 font-semibold text-[11px] shrink-0 cursor-pointer transition-all active:scale-95"
+              >
+                🔑 এপিআই কি সেট করো
+              </button>
+            </div>
+          )}
+
           {/* Classic Clean Model Selector - অন্য মডেল সিলেক্ট করলে আগের প্রম্পট সরে সরাসরি নতুন মডেলে জেনারেট হবে */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 bg-transparent scrollbar-none no-scrollbar">
             {ALL_AI_MODELS.map((model) => {
@@ -684,6 +705,12 @@ export const PromptArchitect: React.FC<PromptArchitectProps> = ({
           </div>
         )}
       </div>
+
+      {/* API Key Rotation & Settings Modal */}
+      <ApiKeySettingsModal 
+        isOpen={isApiKeyModalOpen} 
+        onClose={() => setIsApiKeyModalOpen(false)} 
+      />
     </div>
   );
 };

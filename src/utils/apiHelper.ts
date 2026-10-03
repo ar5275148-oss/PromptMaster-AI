@@ -29,43 +29,56 @@ async function callClientGeminiDirect(systemInstruction: string, userPrompt: str
   const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
   
   for (const apiKey of keys) {
+    if (!apiKey) continue;
+    
     for (const model of models) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{ text: systemInstruction }]
-            },
-            contents: [
-              {
-                parts: [{ text: userPrompt }]
-              }
-            ],
-            generationConfig: {
-              responseMimeType: 'application/json'
-            }
-          })
-        });
-
-        if (res.status === 429) {
-          // Quota exhausted on this key, rotate to next model/key
-          continue;
+      // First attempt with thinking budget if supported, then without
+      const configsToTry = [
+        {
+          responseMimeType: 'application/json',
+          thinkingConfig: { thinkingBudget: 2048 },
+        },
+        {
+          responseMimeType: 'application/json',
         }
+      ];
 
-        if (res.ok) {
-          const resJson = await res.json();
-          const rawText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (rawText) {
-            const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const parsed = JSON.parse(cleaned);
-            return deepSanitizeToTumiTomar(parsed);
+      for (const genConfig of configsToTry) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: {
+                parts: [{ text: systemInstruction }]
+              },
+              contents: [
+                {
+                  parts: [{ text: userPrompt }]
+                }
+              ],
+              generationConfig: genConfig,
+            })
+          });
+
+          if (res.status === 429) {
+            // Quota exhausted on this key, rotate to next key
+            break;
           }
+
+          if (res.ok) {
+            const resJson = await res.json();
+            const rawText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (rawText) {
+              const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+              const parsed = JSON.parse(cleaned);
+              return deepSanitizeToTumiTomar(parsed);
+            }
+          }
+        } catch (e) {
+          // Continue to next config or model
         }
-      } catch (e) {
-        // Continue to next model/key
       }
     }
   }
@@ -79,8 +92,63 @@ async function handleStaticClientFallback(endpoint: string, bodyData: any, keys:
 
   try {
     if (endpoint.includes('analyze-prompt')) {
-      const systemInstruction = `You are the world's greatest AI Prompt Architect. Transform the raw thought into an elite master prompt for ${bodyData.targetModel || 'ChatGPT'}. Use ONLY "তুমি" and "তোমার" in all Bengali outputs; "আপনি" is completely forbidden. Output valid JSON with keys: flaws, missingContext, guidelines, modelSpecificTips, optimizedPrompt { title, masterPromptEn, masterPromptBn, systemInstruction, outputFormatSpec }, variations, scores, thinkingSummary, promptFormat, promptFormatEn.`;
-      const userPrompt = `User Raw Query: """${bodyData.rawThought || ''}"""\nTarget AI: ${bodyData.targetModel || 'ChatGPT'}\nGoal: ${bodyData.goal || 'general'}\nTone: ${bodyData.tone || 'expert'}\nRequested Format: ${bodyData.requestedFormat || 'auto'}`;
+      const systemInstruction = `You are the world's greatest AI Prompt Architect and AI Communication Strategist.
+Your mission: Transform the user's raw thought into an elite, unstoppable master prompt for ${bodyData.targetModel || 'ChatGPT'}.
+CRITICAL PRINCIPLES:
+1. DEEP REASONING & TRANSFORMATION:
+- Never just repeat the user's words! Unpack the hidden complexity, extract the real underlying goal, identify missing context, formulate actionable constraints, and build a masterpiece prompt.
+- The generated Master Prompt must be extensive, concrete, and deeply valuable (200-400 words) so that the target AI delivers an exceptional, world-class response.
+- Adapt the format dynamically: Use flowing narrative paragraphs for creative/general questions, technical specs for coding, strategic frameworks for business, and direct commands for focused tasks. Avoid robotic bullet points on creative tasks!
+2. STRICT BENGALI DIRECTIVE:
+- Use strictly ONLY "তুমি", "তোমার", "তোমাকে", "তোমরা", "তোমাদের".
+- ABSOLUTELY NEVER use "আপনি", "আপনার", "করুন", "বলুন", "লিখুন", "দিন". Always use "করো", "বলো", "লেখো", "দাও".
+3. Return valid JSON matching this schema:
+{
+  "flaws": [
+    { "title": "সংক্ষিপ্ত ত্রুটি", "description": "কেন কাঁচা ভাবনায় ঘাটতি ছিল" }
+  ],
+  "missingContext": [
+    "অনুপস্থিত তথ্য ১", "অনুপস্থিত তথ্য ২"
+  ],
+  "guidelines": [
+    { "rule": "প্রম্পটের মূল নিয়ম", "explanation": "কেন এই নিয়মে প্রম্পট করলে সেরা ফল পাওয়া যায়" }
+  ],
+  "modelSpecificTips": [
+    "${bodyData.targetModel || 'ChatGPT'}-এর জন্য বিশেষ গোপন কৌশল"
+  ],
+  "optimizedPrompt": {
+    "title": "প্রম্পটের আকর্ষণীয় শিরোনাম",
+    "masterPromptEn": "Complete, structured English prompt ready to copy-paste",
+    "masterPromptBn": "সম্পূর্ণ সাজানো বাংলা প্রম্পট (তুমি/তোমার সম্বোধনে, যথাযথ ফরম্যাটে)",
+    "systemInstruction": "Optional expert system instruction",
+    "outputFormatSpec": "ফরম্যাট বিবরণ"
+  },
+  "variations": [
+    { "name": "প্রাকৃতিক অনুচ্ছেদ (প্যারাগ্রাফ স্টাইল)", "tag": "প্যারাগ্রাফ", "prompt": "..." },
+    { "name": "সরাসরি ও সুনির্দিষ্ট কমান্ড", "tag": "সংক্ষিপ্ত", "prompt": "..." },
+    { "name": "ধাপভিত্তিক রূপরেখা", "tag": "ধাপভিত্তিক", "prompt": "..." }
+  ],
+  "scores": {
+    "clarity": 88,
+    "context": 80,
+    "constraints": 75,
+    "roleDefinition": 70,
+    "overallRawScore": 75
+  },
+  "thinkingSummary": "গভীর বিশ্লেষণ ও কীভাবে প্রম্পটটি সর্বোচ্চ মানের করা হয়েছে তার সারসংক্ষেপ",
+  "promptFormat": "ফরম্যাটের বাংলা নাম",
+  "promptFormatEn": "Format English Name"
+}`;
+
+      const userPrompt = `User Raw Thought: """${bodyData.rawThought || ''}"""
+Target AI Model: ${bodyData.targetModel || 'ChatGPT'}
+Goal: ${bodyData.goal || 'general'}
+Language: ${bodyData.language || 'bilingual'}
+Tone: ${bodyData.tone || 'expert'}
+Requested Format: ${bodyData.requestedFormat || 'auto'}
+
+Execute deep architectural reasoning and output the complete JSON.`;
+
       const result = await callClientGeminiDirect(systemInstruction, userPrompt, keys);
       if (result) {
         return new Response(JSON.stringify({ success: true, data: result }), {
@@ -89,8 +157,21 @@ async function handleStaticClientFallback(endpoint: string, bodyData: any, keys:
         });
       }
     } else if (endpoint.includes('polish-text')) {
-      const systemInstruction = `You are a master literary wordsmith. Polish and transform the raw text into captivating Bengali prose. Style: "${bodyData.style || 'literary'}". Use ONLY "তুমি" and "তোমার", never "আপনি". Output JSON: { polishedText, styleName, toneSummary, keyHighlights, variations }`;
-      const userPrompt = `User Raw Text: """${bodyData.rawText || ''}"""\nStyle: ${bodyData.style || 'literary'}`;
+      const systemInstruction = `You are a master literary wordsmith and linguistic stylist.
+Polish and transform the user's raw text into captivating, deeply evocative Bengali prose according to the selected style: "${bodyData.style || 'literary'}".
+CRITICAL: Use ONLY "তুমি" and "তোমার", never "আপনি".
+Output strictly valid JSON:
+{
+  "polishedText": "পরিমার্জিত চমৎকার পাঠ্য",
+  "styleName": "শৈলীর নাম",
+  "toneSummary": "স্বরের বিবরণ",
+  "keyHighlights": ["উন্নতি ১", "উন্নতি ২"],
+  "variations": [
+    { "name": "বিকল্প প্রকাশ ১", "text": "..." },
+    { "name": "বিকল্প প্রকাশ ২", "text": "..." }
+  ]
+}`;
+      const userPrompt = `User Raw Text: """${bodyData.rawText || ''}"""\nSelected Style: ${bodyData.style || 'literary'}`;
       const result = await callClientGeminiDirect(systemInstruction, userPrompt, keys);
       if (result) {
         return new Response(JSON.stringify({ success: true, data: result }), {
@@ -99,7 +180,25 @@ async function handleStaticClientFallback(endpoint: string, bodyData: any, keys:
         });
       }
     } else if (endpoint.includes('generate-rtcf')) {
-      const systemInstruction = `You are a Master Prompt Architect specializing in the RTCF Framework (Role, Task, Context, Format). Use ONLY "তুমি" and "তোমার" in Bengali. Output JSON: { title, category, roleBn, roleEn, taskBn, taskEn, contextBn, contextEn, formatBn, formatEn, completePromptBn, completePromptEn, proTips }`;
+      const systemInstruction = `You are a Master Prompt Architect specializing in the RTCF Framework (Role, Task, Context, Format).
+Transform the raw idea into a powerhouse RTCF prompt.
+CRITICAL: Use ONLY "তুমি" and "তোমার" in all Bengali outputs; "আপনি" is completely forbidden.
+Output strictly valid JSON:
+{
+  "title": "...",
+  "category": "...",
+  "roleBn": "...",
+  "roleEn": "...",
+  "taskBn": "...",
+  "taskEn": "...",
+  "contextBn": "...",
+  "contextEn": "...",
+  "formatBn": "...",
+  "formatEn": "...",
+  "completePromptBn": "...",
+  "completePromptEn": "...",
+  "proTips": ["...", "..."]
+}`;
       const userPrompt = `Target Category: ${bodyData.category || 'auto'}\nRaw Idea: """${bodyData.rawThought || ''}"""\nRefinement: """${bodyData.refineInstruction || ''}"""`;
       const result = await callClientGeminiDirect(systemInstruction, userPrompt, keys);
       if (result) {
