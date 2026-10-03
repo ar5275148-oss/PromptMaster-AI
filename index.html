@@ -29,6 +29,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" crossorigin href="./assets/app.css">
   </head>
   <body class="bg-[#070b14] text-slate-100 antialiased selection:bg-blue-500/30 selection:text-blue-200 overflow-x-hidden" style="background-color: #070b14; color: #f8fafc; margin: 0; min-height: 100vh;">
     <div id="root" class="overflow-x-hidden max-w-full">
@@ -38,6 +39,25 @@
         <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
       </div>
     </div>
-    <script type="module" src="/src/main.tsx"></script>
+    
+    <script type="module">
+      const isDevServer = window.location.hostname === 'localhost' || window.location.hostname.includes('run.app');
+
+      if (isDevServer) {
+        import('/src/main.tsx').catch(() => {
+          loadProductionBundle();
+        });
+      } else {
+        loadProductionBundle();
+      }
+
+      function loadProductionBundle() {
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.crossOrigin = 'anonymous';
+        script.src = './assets/main.js';
+        document.body.appendChild(script);
+      }
+    </script>
   </body>
 </html>
